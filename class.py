@@ -58,8 +58,8 @@ class Classroom:
 		self.id = id
 		self.timeslots = {}
 
-	def addClass(self, timeslot, class):
-		self.timeslots[timeslot] = class
+	def addClass(self, timeslot, Class):
+		self.timeslots[timeslot] = Class
 
 	def getClass(self, timeslot):
 		return self.timeslots[timeslot]
