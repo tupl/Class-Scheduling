@@ -123,9 +123,26 @@ random.seed()  # back to unrepeatable random
 
 def process(room : Class.Classroom, timeSlot : int): # considers doing a modification
     global currentCost
-    if(timeSlot in room.getClasses()): # if there is a room we can delete
+    if(timeSlot in room.getClasses()): # if there is a room
+        #try swapping it somewhere first
         removedClass = room.getClass(timeSlot)
         room.removeClass(timeSlot)
+        targetRoom = random.choice(rooms)
+        targetTimeSlot = random.choice(range(numTimeSlots))
+        if(targetRoom.canAddClass(targetTimeSlot, removedClass)):
+            targetRoom.addClass(targetTimeSlot, removedClass)
+            newCost = cost()
+            probability = math.pow(math.e, -(newCost - currentCost) / temp)
+            if(random.random() > probability):
+                # don't take it, so reset
+                targetRoom.removeClass(targetTimeSlot)
+                
+            else: #take it
+                currentCost = newCost
+                updateCurrentMin()
+                return
+
+        # try dropping the class next if the swap fails
         droppedClasses.add(removedClass)
         newCost = cost()
         probability = math.pow(math.e, -(newCost - currentCost) / temp)
