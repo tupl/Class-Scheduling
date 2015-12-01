@@ -1,9 +1,11 @@
 class Class:
-	def __init__(self, major, size, length, id):
+	id = 0; # static ID counter 
+	def __init__(self, major, size, length):
 		self.major = major
 		self.size = size
 		self.length = length
-		self.id = id
+		self.id = Class.id
+		Class.id = Class.id + 1
 
 	def setLocation(self, location):
 		# This one should save the location
@@ -19,8 +21,8 @@ class Class:
 	def getTimeSlot(self):
 		return self.timeslot
 
-	def setID(self, id):
-		self.id = id
+	'''def setID(self, id):
+		self.id = id'''
 
 	def setMajor(self, major):
 		self.major = major
@@ -53,16 +55,41 @@ class Classroom:
 			map timeslot -> class
 	'''
 
-	def __init__(self, size, id):
+	id = 0; # static ID counter
+
+	def __init__(self, size, numTimeslots):
 		self.size = size
+		self.numTimeslots = numTimeslots
 		self.id = id
+		Classroom.id = Classroom.id + 1
 		self.timeslots = {}
 
 	def addClass(self, timeslot, Class):
 		self.timeslots[timeslot] = Class
 
+	def canAddClass(self, timeslot, Class) -> bool:
+		if(timeslot + Class.getLength() > self.numTimeslots - 1):
+			return False # timeslot extends off of the end
+		classEnd = timeslot + Class.getLength()
+		for slot in self.timeslots.keys():
+			if(slot < classEnd and slot >= timeslot):
+				#the beginning of the previous class overlaps
+				return False
+			previousClassEnd = slot + self.timeslots[slot].getLength()
+			if(previousClassEnd < classEnd and previousClassEnd >= timeslot):
+				#the end of the previous class overlaps
+				return False
+		# no problems
+		return True
+
 	def getClass(self, timeslot):
 		return self.timeslots[timeslot]
+
+	def getClasses(self) -> {}:
+		return self.timeslots
+
+	def removeClass(self, timeslot):
+		del(self.timeslots[timeslot])
 
 	def getSize(self):
 		return self.size
@@ -73,5 +100,5 @@ class Classroom:
 	def setSize(self, size):
 		self.size = size
 
-	def setID(self, id):
-		self.id = id
+	'''def setID(self, id):
+		self.id = id'''
