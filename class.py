@@ -68,16 +68,20 @@ class Classroom:
 		self.timeslots[timeslot] = Class
 
 	def canAddClass(self, timeslot, Class) -> bool:
-		if(timeslot + Class.getLength() > self.numTimeslots - 1):
-			return False # timeslot extends off of the end
 		classEnd = timeslot + Class.getLength()
+		if(classEnd >= self.numTimeslots):
+			return False # timeslot extends off of the end
+		
 		for slot in self.timeslots.keys():
-			if(slot < classEnd and slot >= timeslot):
-				#the beginning of the previous class overlaps
-				return False
 			previousClassEnd = slot + self.timeslots[slot].getLength()
-			if(previousClassEnd < classEnd and previousClassEnd >= timeslot):
-				#the end of the previous class overlaps
+			if(slot <= classEnd and previousClassEnd >= classEnd):
+				#the end of the class overlaps
+				return False
+			if(timeslot <= previousClassEnd and timeslot >= slot):
+				#the begin of the class overlaps
+				return False
+			if(timeslot >= slot and classEnd <= previousClassEnd):
+				#class is inside an existing class
 				return False
 		# no problems
 		return True

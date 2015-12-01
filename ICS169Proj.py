@@ -8,7 +8,7 @@ random.seed(0)  # repeatable random for problem generation
 
 numMajors = 10
 
-classesPerMajor = 10
+classesPerMajor = 15
 
 maxClassSize = 100
 
@@ -28,7 +28,7 @@ droppedClasses = set(classes) #initialized to all classes because we start with 
 
 numTimeSlots = 5
 
-numClassrooms = 60
+numClassrooms = 50
 
 maxRoomSize = 100
 
@@ -79,11 +79,34 @@ def cost():  # minimize this
         
     for room in rooms:
         for key,Class in room.getClasses().items():
-            result += max(0, (Class.getSize() - room.getSize()) * Class.getLength()) # add the number of students that don't fit, if any
-
+            overflow = (Class.getSize() - room.getSize()) * Class.getLength()
+            result += max(0, overflow) # add the number of students that don't fit, if any
     return result
-        
+    
+    '''
+    result = 0
 
+    for droppedClass in droppedClasses:
+        result += 10 * droppedClass.getSize()
+        
+    for room in rooms:
+        for key,Class in room.getClasses().items():
+            overflow = (Class.getSize() - room.getSize()) * Class.getLength()
+            result += max(0, 5 * overflow) # add the number of students that don't fit, if any
+            result += abs(min(0, overflow)) #add the amount of wasted space, if any
+    return result'''
+
+def numConflicts(): # meaningful objective function
+    result = 0
+
+    for droppedClass in droppedClasses:
+        result += droppedClass.getSize()
+        
+    for room in rooms:
+        for key,Class in room.getClasses().items():
+            overflow = (Class.getSize() - room.getSize()) * Class.getLength()
+            result += max(0, overflow) # add the number of students that don't fit, if any
+    return result
 
     #pre class cost
     '''
@@ -109,11 +132,11 @@ def updateCurrentMin():
     global currentMin
     if(currentCost < currentMin):
         currentMin = currentCost
-        currentMinVector = copy.deepcopy(rooms)
+        # currentMinVector = copy.deepcopy(rooms)
 
 temp = 5000
-tempLoss = 0.995
-cutoff = 0.5
+tempLoss = 0.999
+cutoff = 0.1
 
 # order in which to visit (is shuffled)
 roomOrder = [i for i in range(len(rooms))]
@@ -123,25 +146,53 @@ random.seed()  # back to unrepeatable random
 
 def process(room : Class.Classroom, timeSlot : int): # considers doing a modification
     global currentCost
+    global rooms
+    global droppedClasses
+    global temp
     if(timeSlot in room.getClasses()): # if there is a room
         #try swapping it somewhere first
         removedClass = room.getClass(timeSlot)
         room.removeClass(timeSlot)
-        targetRoom = random.choice(rooms)
+        
+        targetRoomIndex = random.choice(range(len(rooms)))
         targetTimeSlot = random.choice(range(numTimeSlots))
-        if(targetRoom.canAddClass(targetTimeSlot, removedClass)):
-            targetRoom.addClass(targetTimeSlot, removedClass)
+        if(targetTimeSlot in rooms[targetRoomIndex].getClasses() and rooms[targetRoomIndex].getClass(targetTimeSlot).getLength() == removedClass.getLength()):
+            # try swapping the classes
+            room.addClass(timeSlot, rooms[targetRoomIndex].getClass(targetTimeSlot))
+            rooms[targetRoomIndex].removeClass(targetTimeSlot)
+            rooms[targetRoomIndex].addClass(targetTimeSlot, removedClass)
+            newCost = cost()
+            if(newCost < currentCost):
+                # take it
+                currentCost = newCost
+                updateCurrentMin()
+                return
+            
+            probability = math.pow(math.e, -(newCost - currentCost) / temp)
+            if(random.random() > probability):
+                # don't take it, so reset
+                rooms[targetRoomIndex].removeClass(targetTimeSlot)
+                rooms[targetRoomIndex].addClass(targetTimeSlot, room.getClass(timeSlot))
+                room.removeClass(timeSlot)
+            else: # take it
+                currentCost = newCost
+                updateCurrentMin()
+                return
+                
+
+        elif(rooms[targetRoomIndex].canAddClass(targetTimeSlot, removedClass)):
+            rooms[targetRoomIndex].addClass(targetTimeSlot, removedClass)
             newCost = cost()
             probability = math.pow(math.e, -(newCost - currentCost) / temp)
             if(random.random() > probability):
                 # don't take it, so reset
-                targetRoom.removeClass(targetTimeSlot)
+                rooms[targetRoomIndex].removeClass(targetTimeSlot)
                 
             else: #take it
                 currentCost = newCost
                 updateCurrentMin()
                 return
-
+            
         # try dropping the class next if the swap fails
         droppedClasses.add(removedClass)
         newCost = cost()
@@ -207,10 +258,15 @@ while(temp > cutoff):
 
     # heartbeat
     # print(schedule)
+    # printSchedule(rooms)
     print(currentCost)
     
 printSchedule(rooms)
 print(currentCost)
+print("num conflicts: " + str(numConflicts()))
+print("num dropped classes: " + str(len(droppedClasses)))
+for Class in droppedClasses:
+    print(str(Class.getSize()) + " : " + str(Class.getLength()))
 
 
 print("Lowest value reached (for debugging/testing):")
