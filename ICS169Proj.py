@@ -10,13 +10,14 @@ numMajors = 10
 
 classesPerMajor = 15
 
+minClassSize = 10
 maxClassSize = 100
 
 maxClassLength = 3 # largest consecutive number of time slots for a class
 
 classes = []
 for major in range(numMajors):
-    classes += [Class.Class(major, size = int(random.random() * maxClassSize), length = int(random.random() * maxClassLength)) for classNum in range(classesPerMajor)]
+    classes += [Class.Class(major, size = minClassSize + int(random.random() * (maxClassSize - minClassSize)), length = int(random.random() * maxClassLength)) for classNum in range(classesPerMajor)]
 # NOTE: class length of zero is possible, and means that the class takes up no additional timeslots beyond the one it is assigned to
 # (this makes things much easier to compute)
 
@@ -30,11 +31,12 @@ numTimeSlots = 5
 
 numClassrooms = 50
 
+minRoomSize = 10
 maxRoomSize = 100
 
 classNum = 0
 
-rooms = [Class.Classroom(size = int(random.random() * maxClassSize), numTimeslots = numTimeSlots) for room in range(numClassrooms)]
+rooms = [Class.Classroom(size = minRoomSize + int(random.random() * (maxRoomSize - minRoomSize)), numTimeslots = numTimeSlots) for room in range(numClassrooms)]
 
 # pre class rooms
 # rooms = [int(random.random() * maxRoomSize) for room in range(numClassrooms)]
