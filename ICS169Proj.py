@@ -4,20 +4,45 @@ import copy
 
 import Class
 
-random.seed(0)  # repeatable random for problem generation
+import csv
+with open('classroomData.csv', 'r') as csvfile:
+    spamreader = csv.reader(csvfile)
+    for row in spamreader:
+        print(row);
 
+random.seed(0)  # repeatable random for problem generation
+'''
 numMajors = 10
 
 classesPerMajor = 15
 
 minClassSize = 10
 maxClassSize = 100
-
+'''
 maxClassLength = 3 # largest consecutive number of time slots for a class
 
 classes = []
+
+with open('classroomData.csv', 'r') as csvfile:
+    spamreader = csv.reader(csvfile)
+    while(True):
+        try:
+            row1 = next(spamreader)
+            print(row1)
+            row2 = next(spamreader)
+            print(row2)
+            if not row1 or not row2:
+                break
+            for i in range(len(row1)):
+                if i != 0 and row1[i] != '' and row2[i] != '': #header data
+                    for count in range(int(row1[i])): # row1 contains the count of classes that are that size
+                        classes.append(Class.Class(0, size = int(row2[i]), length = int(random.random() * maxClassLength)))
+        except StopIteration:
+            break
+        '''
 for major in range(numMajors):
     classes += [Class.Class(major, size = minClassSize + int(random.random() * (maxClassSize - minClassSize)), length = int(random.random() * maxClassLength)) for classNum in range(classesPerMajor)]
+    '''
 # NOTE: class length of zero is possible, and means that the class takes up no additional timeslots beyond the one it is assigned to
 # (this makes things much easier to compute)
 
@@ -29,6 +54,27 @@ droppedClasses = set(classes) #initialized to all classes because we start with 
 
 numTimeSlots = 5
 
+rooms = []
+
+with open('roomData.csv', 'r') as csvfile:
+    spamreader = csv.reader(csvfile)
+    while(True):
+        try:
+            row1 = next(spamreader)
+            print(row1)
+            row2 = next(spamreader)
+            print(row2)
+            if not row1 or not row2:
+                break
+            for i in range(len(row1)):
+                if i != 0 and row1[i] != '' and row2[i] != '': #header data
+                    for count in range(int(row1[i])): # row1 contains the count of classrooms that are that soze
+                        rooms.append(Class.Classroom(size = int(row2[i]), numTimeslots = numTimeSlots))
+        except StopIteration:
+            break
+                
+            
+'''
 numClassrooms = 50
 
 minRoomSize = 10
@@ -37,7 +83,7 @@ maxRoomSize = 100
 classNum = 0
 
 rooms = [Class.Classroom(size = minRoomSize + int(random.random() * (maxRoomSize - minRoomSize)), numTimeslots = numTimeSlots) for room in range(numClassrooms)]
-
+'''
 # pre class rooms
 # rooms = [int(random.random() * maxRoomSize) for room in range(numClassrooms)]
 
@@ -59,7 +105,7 @@ def printSchedule(schedule : [[(int, int)]]):
 
 def printSchedule(schedule):
     for room in schedule:
-        resultLine = "room size: " + repr(room.getSize()).rjust(3)
+        resultLine = "room size: " + repr(room.getSize()).rjust(3) + " : "
         lastRoom = "---"
         i = 0
         while(i < numTimeSlots):
@@ -81,7 +127,7 @@ def cost():  # minimize this
         
     for room in rooms:
         for key,Class in room.getClasses().items():
-            overflow = (Class.getSize() - room.getSize()) * Class.getLength()
+            overflow = (Class.getSize() - room.getSize()) * (Class.getLength() + 1)
             result += max(0, overflow) # add the number of students that don't fit, if any
     return result
     
@@ -226,6 +272,10 @@ def process(room : Class.Classroom, timeSlot : int): # considers doing a modific
         
         
 #do SA
+import time
+
+t0 = time.time()
+
 while(temp > cutoff):
     random.shuffle(roomOrder)
 
@@ -261,19 +311,20 @@ while(temp > cutoff):
     # heartbeat
     # print(schedule)
     # printSchedule(rooms)
-    print(currentCost)
-    
+    print(currentCost, " : ", temp)
+
+t1 = time.time()
 printSchedule(rooms)
 print(currentCost)
 print("num conflicts: " + str(numConflicts()))
 print("num dropped classes: " + str(len(droppedClasses)))
+print("time: " + str(t1-t0))
 for Class in droppedClasses:
     print(str(Class.getSize()) + " : " + str(Class.getLength()))
 
 
 print("Lowest value reached (for debugging/testing):")
 
-printSchedule(currentMinVector)
 print(currentMin)
 
 print("DONE!")
