@@ -1,0 +1,54 @@
+summary
+
+Class scheduling (CS) problem is one of difficult problems in
+operational research. Given courses, classrooms, professor
+schedule, timeslot and other parameter, one has to assign courses to classroom and maximize its utility. For example, Some professor likes to work in the morning. Others like to work in the afternoon. A good schedule should try as best as possible to fit the professor's preference. Especially, it's not enough to only assign
+a course to a classroom with higher capacity. It does not
+make sense to put a class with 45 students to a hall supporting 300 students. However, putting a 50 student
+to a classroom of 80 can have some benefits. For instance,
+it reduces a chances of students' cheating.
+There are many models and formulations are used to solve
+the problem. Most of method make use of local search techniques such as simulated annealing, genetic algorithm that try to find a good solution. The problem with theses algorithm is that it does not
+yield an optimal solution. However, some research also introduces a solution to CS by using linear progamming technique combined with Boolean Satisfiability solver. One advantage of this approach is that it can tell if problem has a solution or not. SAT problem is
+formulated in CNF form
+
+f(a,b,c) = (a+b)(b+c) (+ represents or, . represents and)
+a,b,c are boolean variables with domain {0,1}
+The problem is to find a solution that makes f become 1
+Unluckily, SAT problem is NP-Complete. Finding solution for it make use of backtracking search with some heuristic functions. SAT solvers has been optimized with
+algorithm such as minimize the conflict. Moreover, we can save the conflict to avoid generate the same configuration next time.
+Disadvantage of SAT solver is that the problem is formulated as CNF that restricts it usage. Some researcher
+propose pseudo-Boolean with
+a1*x1 + a2*x2 + a3*x3 + ... an * xn >= b with ai, b are
+positive integer and xi is boolean variables. This proposal extends the its usage drastically by removing
+exponential constraint.
+
+Now, How to formulate CS with Linear programming and
+SAT problem. Given n courses and m classrooms
+Define
+	x[i][j] = 1 if course i assigned to room j
+There constraints:
+	1> Each course is assigned to one class room
+		sum j:1->m x[i][j] = 1 for any i
+	2> Each classroom fit up to one course
+		sum i:1->n x[i][j] <= 1 for any j
+	3> Each classroom must have capacity greater
+		than course's enrollment
+		sum j in T x[i][j] = 0 for any i
+		T is set of classroom with capacity less than
+		class i
+Discussing about utility, it needs to avoid putting
+low-capcity to big-capacity classroom.
+Minimize sum c[i][j] * x[i][j]
+with c[i][j] = Capacity classroom j / # student in courses i
+Using some Integer Linear Programming solver like CPLEX, we could solve 100 courses with optimal result in 0.3 second on computer 4GB, 3GHz for CPU
+
+Another approach to formulation and solving method using simulated annealing. This forumlation pay attention to the make class schedule
+for student and professor in high school. The objective function emphasizes
+reduction in the gap between each class. For example, it's not a good
+schedule for student to have class at 8 to 10am, then 3 to 5pm. It's a big gap. It should try to reduce the gap as much as possible. The solver for
+class scheduling combines three methods including Monte Carlo, Simulated
+Annealing, Bayes heuristic approach. Some experiment is done with 350
+students and 66 teachers. After 10000 iterations, it founds fairly good
+schedule. However, with a student of around 3000, it takes around 2 hours
+to generate a good schedule.
