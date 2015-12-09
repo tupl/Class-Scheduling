@@ -52,7 +52,7 @@ droppedClasses = set(classes) #initialized to all classes because we start with 
 # pre Class-class classes
 # classes = [[int(random.random() * maxClassSize) for _class in range(numMajorClasses)] for major in range(numMajors)]
 
-numTimeSlots = 5
+numTimeSlots = 16
 
 rooms = []
 
